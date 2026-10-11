@@ -1,0 +1,39 @@
+JVM SHYAMALI WEBSITE — AUDIT AND REPAIR REPORT
+Audit date: 9 October 2026
+
+RESULT
+The corrected local website bundle passed the HTTP/API integration suite, the all-teacher account suite, static markup/script checks, and source-data integrity assertions. The bundled database was restored to the original supplied student-data values after testing; temporary test edits, enquiries, and audit events were cleared before packaging.
+
+TEST RESULTS
+- API integration: 44/44 checks passed.
+- Teacher accounts: 123/123 checks passed across all 20 supplied teacher accounts.
+- Teacher access modes: 17 academic accounts and 3 extracurricular-only accounts. Every tested teacher had a non-empty scoped roster, received no fee/parent-contact/password fields, and could commit only the fields allowed for their mode.
+- Persistent write test: a committed activity update was visible through the API after stopping and restarting the server. The temporary test change was then restored.
+- Route check: the root page and all seven section pages returned HTTP 200.
+- Access control: parent/student accounts were restricted to their own linked record and denied write attempts; teacher out-of-scope/forbidden-field edits were denied; invalid marks were rejected; unauthenticated access was denied.
+- Private-file checks: source credentials, private seed records, database, and original source HTML are not served by the application allowlist.
+- Static HTML/JavaScript check: 8 HTML pages scanned; no unresolved inline event-function names, missing local page targets, duplicate IDs, or broken in-page anchors were found. The 27 literal button elements in HTML markup had a handler, submit/reset role, direct script binding, or intentional disabled state. Inline JavaScript syntax and Python server syntax passed.
+- Served HTML check: no supplied student password values were found in the enhanced public index page.
+
+DATA-PRESERVATION CHECKS
+- All five originally supplied JSON files (achievements, credentials, faculty records, student records, and section roster) are byte-identical to the uploaded source ZIP.
+- jvm_shyamali_portal.html is byte-identical to the original uploaded index.html, retained as an untouched recovery copy.
+- The final SQLite records table contains all 458 students and exactly matches the supplied student seed after removing password fields from each record payload.
+- Account table contains 937 accounts: 1 master, 20 teachers, 458 students, and 458 parents. Stored account passwords use salted PBKDF2-HMAC-SHA256 hashes.
+- Test-created audit events and enquiries were cleared; the database was verified before packaging.
+
+REPAIRS INCLUDED
+- Separate Home, News & Achievements, Academics, Campus, Admissions & Fees, Portal, and Contact section pages with working local links.
+- Server-backed SQLite commits for teacher/master updates, plus an audit trail for changes.
+- Server-side least-privilege role checks; no parent/student edits; academic teachers are limited to assigned student rosters and allowed academic fields; broad-wing sports/arts/music staff use an extracurricular-only workspace.
+- Fixed wrong sample ID/fee lookup behavior, removed the fallback that could show an unrelated first student, and prevented a fake “payment completed” result when no payment provider is configured.
+- Contact enquiries are saved for master review; email delivery is not configured.
+- The optional Ollama chatbot can use a locally installed open model and falls back to the built-in school FAQ if Ollama is unavailable.
+
+LIMITATIONS AND DEPLOYMENT SAFETY
+- Automated visual browser clicking could not be completed in this environment because browser navigation to the local test server was blocked. The static handler/link checks and live HTTP/API tests ran successfully, but this report does not claim screenshot-based testing in every browser.
+- Payment processing is intentionally disabled pending integration with a real school-approved gateway. Contact messages are stored but not emailed. Ollama and a downloaded model are required for free local-model chatbot responses.
+- Run the bundle using the included start script or `python app_server.py --port 8000`. Do not use `python -m http.server`, open the site via file://, or serve the ZIP as static public content.
+- This bundle includes the original supplied credential JSON and private recovery seed records to avoid losing source data. Keep the ZIP and the entire `private_data` folder confidential; never publish them. Before real school use, rotate supplied/demo passwords and deploy behind school-managed HTTPS with appropriate privacy/security controls. The server binds to 127.0.0.1 by default and is intended for local review, not direct Internet exposure.
+
+UPDATE (v3): credentials.json and faculty-source-records.json were deleted (unused; the latter exposed passwords through the public allowlist).
